@@ -6,56 +6,6 @@ library(tidyverse)
 library(keras)
 library(tensorflow)
 library(zoo)
-#install_tensorflow()
-
-# ── Normalizing the data ──────────────────────────────────────────────
-
-ELDENRING_ccu <- read.csv("Training_Data/steamdb_chart_ELDENRING.csv")
-ELDENRING_ccu$DateTime <- as.POSIXct(ELDENRING_ccu$DateTime, format = "%Y/%m/%d %H:%M")
-ELDENRING_ccu$DateTime <- as.Date(ELDENRING_ccu$DateTime)
-
-ELDENRING_price <- read.csv("Training_Data/steamdb_chart_ELDENRING_Price.csv")
-ELDENRING_price$DateTime <- as.POSIXct(ELDENRING_price$DateTime, format = "%Y-%m-%d %H:%M:%S")
-ELDENRING_price$DateTime <- as.Date(ELDENRING_price$DateTime)
-ELDENRING_price <- ELDENRING_price[, 1:2]
-ELDENRING_price <- rename(ELDENRING_price,Final = Final.price)
-
-ELDENRING_marker <- read.csv("Training_Data/steamdb_chart_ELDENRING_Marker.csv")
-ELDENRING_marker <- select(ELDENRING_marker,1)
-ELDENRING_marker$Date <- dmy(ELDENRING_marker$Date)
-ELDENRING_marker$Date <- as.Date(ELDENRING_marker$Date)
-ELDENRING_marker$Label <- 1
-
-ELDENRING_ccu <- na.omit(ELDENRING_ccu)
-ELDENRING_price <- na.omit(ELDENRING_price)
-ELDENRING_marker <- na.omit(ELDENRING_marker)
-
-# Normalization
-norm_ELDENRING_ccu<-ELDENRING_ccu
-norm_ELDENRING_ccu$Players <- as.vector(scale(norm_ELDENRING_ccu$Players))
-norm_ELDENRING_price <- ELDENRING_price
-norm_ELDENRING_price$Final <- as.vector(scale(norm_ELDENRING_price$Final))
-
-
-#Combine the price data and marker data to ccu data
-norm_ELDENRING_ccu <- norm_ELDENRING_ccu %>%
-  #leftjoin the price data to ccu data
-  left_join(norm_ELDENRING_price, by = "DateTime") %>%
-  # filled the previous price
-  fill(Final, .direction = "down")%>%
-  fill(Final, .direction = "up")
-
-norm_ELDENRING_ccu <- norm_ELDENRING_ccu %>%
-  mutate(Label = if_else(DateTime %in% ELDENRING_marker$Date, 1, 0))
-
-#Save the normalized data
-#write.csv(norm_ELDENRING_ccu, "Normalized Data/norm_ELDENRING_ccu.csv", row.names = FALSE)
-
-
-library(tidyverse)
-library(keras3)
-library(tensorflow)
-library(zoo)
 
 # ── 0. Random Seed ──────────────────────────────────────────────
 set.seed(42)
